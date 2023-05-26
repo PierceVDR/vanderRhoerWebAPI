@@ -8,7 +8,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class WebAPI {
-    private static final Scanner SCAN  = new Scanner(System.in);
 
     public static void getNowPlaying() {
         String APIkey = "0a647dab7bbb303e8148d2c501afeaf1"; // your personal API key on TheMovieDatabase
@@ -71,6 +70,73 @@ public class WebAPI {
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
+        }
+    }
+
+    private static final Scanner SCAN  = new Scanner(System.in);
+    private static final String KEY = "0a647dab7bbb303e8148d2c501afeaf1";
+
+    public static void getTopRatedTV() {
+        String url = ("https://api.themoviedb.org/3/tv/top_rated") +
+                ("?api_key="+KEY); // I find it helpful to split up the URL like this, rather than with multiple variables
+
+        JSONObject showsResponse = getResponse(url);
+
+        JSONArray shows = showsResponse.getJSONArray("results");
+        for (int i = 0; i < shows.length(); i++) {
+            JSONObject s = shows.getJSONObject(i);
+            String name = s.getString("name");
+            int id = s.getInt("id");
+            String posterPath = s.getString("poster_path");
+            String fullPosterPath = "https://image.tmdb.org/t/p/w500" + posterPath;
+            System.out.println(id + " " + name + " " + fullPosterPath);
+        }
+
+
+        // "Learn more" function:
+        System.out.print("\nEnter an ID to learn more: ");
+        String id = SCAN.nextLine();
+
+        String url2 = ("https://api.themoviedb.org/3/tv/" + id) + ("?api_key="+KEY);
+
+        JSONObject s = getResponse(url2);
+
+        // Printing out info:
+        System.out.println();
+        String tagline = s.getString("tagline");
+        if (!tagline.equals("")){
+            System.out.println("Tagline: " + tagline);
+        }
+
+        System.out.println("Name: " + s.getString("name"));
+        System.out.println("Overview: " + s.getString("overview"));
+        System.out.println("Homepage: " + s.getString("homepage"));
+
+        System.out.println("Genres:");
+        for (Object v : s.getJSONArray("genres")) {
+            System.out.println("  -  " + ((JSONObject) v).getString("name"));
+        }
+
+        System.out.println("# of Seasions: " + s.getInt("number_of_seasons"));
+        System.out.println("Last episode aired: " + s.getString("last_air_date"));
+        System.out.println("First episode aired: " + s.getString("first_air_date"));
+
+    }
+
+
+    private static JSONObject getResponse(String url){
+        try {
+            URI myUri = URI.create(url); // creates a URI object from the url string
+            HttpRequest request = HttpRequest.newBuilder().uri(myUri).build();
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            String  urlResponse = response.body();
+
+            return new JSONObject(urlResponse);
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return null;
         }
     }
 }
